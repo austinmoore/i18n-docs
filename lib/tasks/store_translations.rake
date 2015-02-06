@@ -30,12 +30,12 @@ namespace :i18n do
 
     source_dir  = Rails.root.join('config', 'locales')
     output_dir  = Rails.root.join('tmp')
-    locales     = I18n.available_locales
+    locale     =  ENV['locale'] || :en
 
-    input_files = Dir[File.join(source_dir, ENV['locale'] || 'en', '*.yml')]
+    input_files = Dir[File.join(source_dir, "**/*.#{locale}.yml")]
 
     puts ""
-    puts "  Detected locales: #{locales}"
+    puts "  Detected locale: #{locale}"
     puts "  Detected files:"
     input_files.each {|f| puts "    * #{File.basename(f)}" }
 
@@ -43,8 +43,9 @@ namespace :i18n do
     puts "  Start exporting files:"
 
     input_files.each do |file|
-      file = File.basename(file)
-      exporter = LocalchI18n::TranslationFileExport.new(source_dir, file, output_dir, locales)
+      relative_path = Pathname.new(file).relative_path_from(Pathname.new(source_dir)).to_s.gsub('.yml', '.csv')
+      output_file = File.join(output_dir, "export_translations", relative_path)
+      exporter = LocalchI18n::TranslationFileExport.new(file, output_file, [locale])
       exporter.export
     end
 
